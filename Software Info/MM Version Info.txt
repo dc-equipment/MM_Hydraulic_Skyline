@@ -1,0 +1,120 @@
+OQ 25-5-21:
+P9010-04B and P9020-04B are both uploaded into the machine.
+P9000-04D contains an update to make motor stationary detection more rebust, it still needs to be uploaded into the machine (currently P9000-04C is in the machine).
+
+OQ 4-6-21:
+Created "MM000-P9000-04D encoder version" with corrected rpm calculation for use with an encoder.
+
+OQ 9-6-21:
+Found an error with revsion 04D where the motor rpm threshold setpoints weren't working. Created "MM000-P9000-04E" and "MM000-P9000-04E encoder version" to fix this.
+
+JT 2-7-21
+Rev5
+P9000-05A	Added a new CAN global variable list which outputs some variables as INTs. These variables can be logged using CLX000 logger and are seen on IDs 27 and 28. Each variable is 2 bytes
+		When joystick is in Neutral position in Operation Mode, the band brake is now OFF
+
+P9010-05A	Updated to rev5. No change to software
+
+P9020-05A	Updated to rev5. No change to software
+
+P9000-05B	Removed CAN logging function as it moved position of variable on CAN bus to Display causing errors blocking Operating Mode
+
+P9000-05C	Re-did CAN logging function with new COB-ID so the variables don't overlap. Variables to log now come up from CAN ID 64
+
+P9000-06A	Put a Stage1 Brake Setpoint for the WCB from 0-30%
+P9010-06A
+P9020-06A	Put a Stage1 Brake Setpoint for the WCB from 0-30%
+
+P9000-06B	Added logic so OverSpeed and LowPressure procedures aren't both changing brake levels at the same time
+
+P9000-06C	Changed Low Press Alarm from PortB to PortA
+		Changed change displacement procedure to look at PortB not PortA
+
+P9000-07x	Updated change displacement logic to be automatic with boost button held on for entire operation.
+			When rpm<100 we want high displacement always
+			If < 1700psi for >2sec, then change to low displacement
+			If >4000psi AND > 80% of highDispRPM setpoint, then don't change displacement
+			If >4000psi AND < 80% of highDispRPM setpoint, then change to high displacement		
+
+P9000-07A	Port A - Change displacement, 	Port B - Low press alarm, 	Use with Encoder
+P9000-07B	Port A - Low press alarm, 	Port B - Change displacement, 	Use with Encoder
+P9000-07C	Port A - Change displacement, 	Port B - Low press alarm, 	Use with Speed sensor
+P9000-07D	Port A - Low press alarm, 	Port B - Change displacement, 	Use with Speed sensor
+		Also changed Port A pressure to Map to DI1 on CR0431 (as per Modern schematic)
+		and changed Port B pressure to Map to DI0 on CR0431 (as per Modern schematic)
+
+Rev7 Working Files
+P9000-07E	Added motorSpeed to CAN_data_to_display, so all motorspeed calcs are done in 1 place
+P9010-07A
+P9020-07D	Fixed error displaying Motor Speed on 2 screens
+
+Rev8 
+P9000-08A, P9010-08A, P9020-08A:
+		Add Low pressure alarm to HMI at Low Pressure L2 
+		Add Low pressure warning to HMI at Low Pressure L1
+		Change Low pressure setpoints so L2 < L1 setpoint
+		Low pressure and overspeed events happen at any time, not just when joystick is in pay-out direction
+		Overload doesn't affect the brakes
+
+P9000-08B:	When we have a L3 Overspeed event, the brakes and alrams stay applied until motor is stopped (motor speed <5) for > 3sec
+
+P9000-08C: 	Bench tested and fixed some bugs. 
+
+P9000-08D: 	Put 150ms delay on L1 Pressure decay. Only apply S1 & S2 overspeed if paying out. Still applies S3 overspeed if paying out or winding in.
+
+P9020-08T: 	allows you to increase the low pressure setpoint to 1500psi. Please only use for testing 
+
+P9020-08B:	Changed default Setpoints:
+			Stage 2 braking:	50%
+			Stage 1 braking:	10%
+		Changed setoint range to:
+			Stage 2 braking:	25%-100%
+
+** Field testing done with load. Only one issue described here by Paul :
+"The alarm for the boost pressure is coming on. It appears to be random as we can find no correlation between high or low pressure and the alarm coming on. We can get it to come on by feathering the control leaver, just barely moving it, repeatedly. Once activated it will not turn off even when the control lever returns to neutral. But it does stop when the band brake hand lever is moved bringing the pressure to approximately 40 psi kills the alarm."
+
+It appears that low pressure alarm comes on when motor rpm is >5. This is a really low number and the drum appears to be stationary when motor rpm is around 5 rpm. Nigel has agreed we can up this setpoint to 20rpm without damaging the motor
+
+They are still using speed sensor on the motor on a sprocket with 75 teeth**
+
+P9000-08E:	Change low pressure alarm to come on above 20rpm and reset when motor is below 20rpm
+
+** Bug identified from logfile Data on 5/5/22. WCB doesn't appear to come on when joystick is in neutral. Seems like this is a conflict with the WCBramp outputing to WaterBrake value constantly. WCB may well have been working as expected **
+
+P9000-08F:	Attempted to re-arrange code so WCB and Bandbrake were being called from on IF statement. Decided not to persue this because of the risk of introducing a new fault and more testing needed
+
+P9000-08G:	Removed code setting WCB = 0 in low pressure & overspeed programs. This is set in Structure program so shouldn't be a conflict when Joystick is in neutral (WCB=1000)
+		Also removed WCBramp so WCB log value works.
+		Added Overload, overspeed low pressure and sensor failures to log file
+
+** Still had low boost alarm but less common. 
+
+Also noted that it occasionally kicks out of Skyline Mode for no reason with no operator input 
+
+Also have an issue where we get a sensor fault very rarely**
+
+P9000-08H:	Changed low pressure alarm so there is a 500ms delay on L1 alarm
+		Changed low pressure alarm so it kicks in if MotorRPM > 10 for 2 sec and resets if MotorRPM < 20 for 2 sec.
+
+P9020-08C: 	Changed low press setpoint L1 min to 100
+		Changed low press setpoint L2 min to 50
+
+P9020-08D: 	Changed 'Skyline Mode' off button to 'esc' button
+
+P9000-08J:	Implemented WCB ramp again
+		Changed logic so encoderFail happens when encoder is static & speed sensor Hz is over 63Hz which equates to 50rpm. There is a 500ms delay on this before the encoderFail variable activates.
+
+P9000-09:	Changed ramp so scale is correct. 
+		Added bandbrake slip setpoint. Added 1sec time to check if motor has stopped. If timer has eleapsed and joystick's in neutral, apply band brake at slip setpoint
+		Added low pressure alarm when joystick is in payout position.
+		Reset overspeed alarms even if not in skyline mode
+		Added overload procedure with logic, not hooked up braking in overload condition
+
+P9010-09:	Same as P9010-08A	
+
+P9020-09:	Changed ramp to 100ms intervals with minimum 100ms. Default changed from 4sec to 2sec
+		Added adjustable setpoint for bandbrake slip when joystick is in neutral
+
+P9000-09A:	Created braking and alarm procedure where all WCB, band brake and buzzer logic is. NEEDS TEST.
+		NEED TO add Overload Alarm to HMI
+

@@ -1,0 +1,17 @@
+Change to Change Displacement Procedure
+
+When rpm=0 we want high displacement always
+
+If < 1700psi for >2sec, then change to low displacement
+
+If >4000psi AND > 80% of highDispRPM setpoint, then keep in low displacement
+
+If >4000psi AND < 80% of highDispRPM setpoint, then change to high displacement
+
+
+...
+Change back to speed sensor from encoder
+
+...
+Motorspeed only calculated in CR0403, stored as global variable and sent to display unit via CAN
+
